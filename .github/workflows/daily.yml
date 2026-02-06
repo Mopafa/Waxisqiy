@@ -1,47 +1,92 @@
 name: Daily Marketing Bot
+
 permissions:
   contents: write
+
 on:
   workflow_dispatch: {}
   schedule:
-    - cron: "0 9 * * *"  # Runs daily at 09:00 UTC
+    - cron: "0 9 * * *"   # 09:00 UTC daily
 
 jobs:
   generate:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
       - name: Generate marketing content (Gemini)
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           python - << 'PY'
-          import os, requests, datetime, pathlib
+          import os, requests, datetime, pathlib, sys
 
-          key = os.environ["GEMINI_API_KEY"]
-          url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.0-pro:generateContent?key={key}"
+          # ---- 1. Check API key ----
+          key = os.getenv("GEMINI_API_KEY", "").strip()
+          if not key:
+              print("ERROR: GEMINI_API_KEY secret is missing")
+              sys.exit(1)
+
+          # ---- 2. Gemini endpoint ----
+          url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+
+          headers = {
+              "Content-Type": "application/json",
+              "X-goog-api-key": key
+          }
 
           prompt = """Create today's marketing pack for my business.
 
-          Output in Markdown:
-          - Instagram caption + hashtags
-          - Facebook post
-          - YouTube title + description
-          - WhatsApp message text
+          Output clean Markdown with headings:
+
+          ## Instagram
+          - Caption (simple English)
+          - 12 hashtags (not spammy)
+
+          ## Facebook
+          - Slightly longer post
+
+          ## YouTube
+          - Title (max 70 chars)
+          - Description (5–7 lines)
+          - 5 tags
+
+          ## WhatsApp
+          - Short promotional message with CTA
           """
 
-          payload = {"contents":[{"parts":[{"text": prompt}]}]}
-          r = requests.post(url, json=payload, timeout=60)
-          r.raise_for_status()
+          payload = {
+              "contents": [
+                  {
+                      "parts": [
+                          { "text": prompt }
+                      ]
+                  }
+              ]
+          }
 
-          text = r.json()["candidates"][0]["content"]["parts"][0]["text"]
+          # ---- 3. Call Gemini ----
+          r = requests.post(url, headers=headers, json=payload, timeout=60)
 
+          if r.status_code != 200:
+              print("STATUS:", r.status_code)
+              print("BODY:", r.text[:2000])
+              sys.exit(1)
+
+          data = r.json()
+          text = data["candidates"][0]["content"]["parts"][0]["text"]
+
+          # ---- 4. Save output ----
           out = pathlib.Path("output")
           out.mkdir(exist_ok=True)
+
           today = datetime.date.today().isoformat()
-          (out / f"{today}.md").write_text(text, encoding="utf-8")
-          print("Saved:", out / f"{today}.md")
+          file = out / f"{today}.md"
+          file.write_text(text, encoding="utf-8")
+
+          print("Saved:", file)
           PY
 
       - name: Commit output
@@ -49,5 +94,5 @@ jobs:
           git config user.name "marketing-bot"
           git config user.email "marketing-bot@users.noreply.github.com"
           git add output/*.md
-          git commit -m "Daily content $(date -u +%Y-%m-%d)" || exit 0
+          git commit -m "Daily marketing content $(date -u +%Y-%m-%d)" || exit 0
           git push
