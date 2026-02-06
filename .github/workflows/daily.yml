@@ -11,83 +11,15 @@ on:
 jobs:
   generate:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Generate marketing content (Gemini)
+      - name: Run generator
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          python - << 'PY'
-          import os, requests, datetime, pathlib, sys
-
-          # ---- 1. Check API key ----
-          key = os.getenv("GEMINI_API_KEY", "").strip()
-          if not key:
-              print("ERROR: GEMINI_API_KEY secret is missing")
-              sys.exit(1)
-
-          # ---- 2. Gemini endpoint ----
-          url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
-
-          headers = {
-              "Content-Type": "application/json",
-              "X-goog-api-key": key
-          }
-
-          prompt = """Create today's marketing pack for my business.
-
-          Output clean Markdown with headings:
-
-          ## Instagram
-          - Caption (simple English)
-          - 12 hashtags (not spammy)
-
-          ## Facebook
-          - Slightly longer post
-
-          ## YouTube
-          - Title (max 70 chars)
-          - Description (5–7 lines)
-          - 5 tags
-
-          ## WhatsApp
-          - Short promotional message with CTA
-          """
-
-          payload = {
-              "contents": [
-                  {
-                      "parts": [
-                          { "text": prompt }
-                      ]
-                  }
-              ]
-          }
-
-          # ---- 3. Call Gemini ----
-          r = requests.post(url, headers=headers, json=payload, timeout=60)
-
-          if r.status_code != 200:
-              print("STATUS:", r.status_code)
-              print("BODY:", r.text[:2000])
-              sys.exit(1)
-
-          data = r.json()
-          text = data["candidates"][0]["content"]["parts"][0]["text"]
-
-          # ---- 4. Save output ----
-          out = pathlib.Path("output")
-          out.mkdir(exist_ok=True)
-
-          today = datetime.date.today().isoformat()
-          file = out / f"{today}.md"
-          file.write_text(text, encoding="utf-8")
-
-          print("Saved:", file)
-          PY
+          python3 -m pip install --upgrade pip requests
+          python3 scripts/generate_daily.py
 
       - name: Commit output
         run: |
