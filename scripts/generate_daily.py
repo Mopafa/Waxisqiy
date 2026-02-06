@@ -51,19 +51,44 @@ def main():
                 "parts": [
                     {
                         "text": (
-                            "Create today's marketing pack for my business.\n\n"
+                            "You are a local marketing expert.\n\n"
+                            
+                            "Business details:\n"
+                            "- Business type: Car wash\n"
+                            "- City: Bangalore\n"
+                            "- Target customers: daily commuters, apartment residents, EV owners\n"
+                            "- Key strengths: scratch-free wash, water-saving, careful cleaning\n"
+                            "- Starting price: ₹399\n\n"
+                        
+                            "Create TODAY'S marketing content. Be specific. Do NOT use placeholders.\n\n"
+                        
                             "Output clean Markdown with headings:\n\n"
+                        
                             "## Instagram\n"
-                            "- Caption (simple English)\n"
-                            "- 12 hashtags (not spammy)\n\n"
+                            "- Caption (friendly, local Indian English)\n"
+                            "- Mention Bangalore\n"
+                            "- Mention starting price ₹399\n"
+                            "- 10–12 relevant hashtags\n\n"
+                        
                             "## Facebook\n"
-                            "- Slightly longer post\n\n"
+                            "- Slightly longer post\n"
+                            "- Explain why scratch-free + water-saving matters\n"
+                            "- Mention location Bangalore\n\n"
+                        
                             "## YouTube\n"
-                            "- Title (max 70 chars)\n"
-                            "- Description (5–7 lines)\n"
-                            "- 5 tags\n\n"
+                            "- Title (max 70 characters)\n"
+                            "- Description (5–7 short lines)\n"
+                            "- 5 SEO-friendly tags\n\n"
+                        
                             "## WhatsApp\n"
-                            "- Short promotional message with CTA\n"
+                            "- Short message\n"
+                            "- Include price ₹399\n"
+                            "- Clear CTA: Call / Visit / Reply YES\n\n"
+                        
+                            "Rules:\n"
+                            "- No placeholders like [Your Business]\n"
+                            "- No generic corporate language\n"
+                            "- Sound like a real local business\n"
                         )
                     }
                 ]
