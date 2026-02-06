@@ -1,0 +1,53 @@
+name: Daily Marketing Bot
+permissions:
+  contents: write
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "0 9 * * *"  # Runs daily at 09:00 UTC
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate marketing content (Gemini)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python - << 'PY'
+          import os, requests, datetime, pathlib
+
+          key = os.environ["GEMINI_API_KEY"]
+          url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={key}"
+
+          prompt = """Create today's marketing pack for my business.
+
+          Output in Markdown:
+          - Instagram caption + hashtags
+          - Facebook post
+          - YouTube title + description
+          - WhatsApp message text
+          """
+
+          payload = {"contents":[{"parts":[{"text": prompt}]}]}
+          r = requests.post(url, json=payload, timeout=60)
+          r.raise_for_status()
+
+          text = r.json()["candidates"][0]["content"]["parts"][0]["text"]
+
+          out = pathlib.Path("output")
+          out.mkdir(exist_ok=True)
+          today = datetime.date.today().isoformat()
+          (out / f"{today}.md").write_text(text, encoding="utf-8")
+          print("Saved:", out / f"{today}.md")
+          PY
+
+      - name: Commit output
+        run: |
+          git config user.name "marketing-bot"
+          git config user.email "marketing-bot@users.noreply.github.com"
+          git add output/*.md
+          git commit -m "Daily content $(date -u +%Y-%m-%d)" || exit 0
+          git push
