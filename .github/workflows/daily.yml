@@ -12,36 +12,44 @@ jobs:
   generate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
         with:
-          # fetch-depth: 0 ensures the bot sees the full history for a clean rebase
-          fetch-depth: 0
+          fetch-depth: 0  # ensures full history for rebase
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"  # adjust if needed
+
+      - name: Install Python dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install requests feedparser
 
       - name: Run generator
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          python3 -m pip install --upgrade pip requests
           python3 scripts/generate_daily.py
 
-      - name: Commit and Push output
+      - name: Commit and push output
         run: |
           git config user.name "marketing-bot"
           git config user.email "marketing-bot@users.noreply.github.com"
           
-          # Stage only the new markdown files
-          git add output/*.md
-          
-          # Check if there are changes to commit to avoid errors
-          if git diff --staged --quiet; then
+          git add output/*.txt
+
+          # Only commit if there are changes
+          if git diff --cached --quiet; then
             echo "No changes to commit"
             exit 0
           fi
 
           git commit -m "Daily news content $(date -u +%Y-%m-%d)"
-          
-          # Pull latest changes and rebase your new commit on top of them
+
+          # Pull latest changes and rebase
           git pull --rebase origin main
-          
-          # Push the integrated changes
+
+          # Push new changes
           git push origin main
