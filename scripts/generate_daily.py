@@ -27,11 +27,11 @@ def fetch_local_news_rss(rss_urls, keyword="KR Puram"):
     news_items = []
     for url in rss_urls:
         feed = feedparser.parse(url)
-        for entry in feed.entries[:10]:  # latest 10 items per feed
+        for entry in feed.entries[:10]:
             title = entry.get("title", "").strip()
             summary = entry.get("summary", "").strip()
             text = f"{title}: {summary}" if summary else title
-            if keyword.lower() in text.lower():  # filter for KR Puram
+            if keyword.lower() in text.lower():
                 news_items.append(text)
     return news_items
 
@@ -65,7 +65,7 @@ def call_gemini(prompt, api_key, max_retries=3):
             r.raise_for_status()
             data = r.json()
 
-            # ✅ Defensive check for 'candidates'
+            # ✅ Defensive access
             candidates = data.get("candidates")
             if not candidates:
                 print(f"⚠️ Attempt {attempt}: 'candidates' missing. Full response:\n{json.dumps(data, indent=2)}")
@@ -102,6 +102,8 @@ def main():
         sys.exit(1)
 
     prompt = generate_prompt(news_items)
+
+    # ✅ Use only the safe Gemini function
     summarized_news = call_gemini(prompt, api_key)
     if not summarized_news:
         print("❌ Failed to fetch summarized news from Gemini.")
