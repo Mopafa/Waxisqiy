@@ -1,19 +1,19 @@
 import os, requests, datetime, pathlib, sys
 
 def get_latest_news_context():
-    """Specific news context for March 5, 2026."""
+    """General local community news for KR Puram & TC Palaya (March 5, 2026)."""
     return {
-        "weather": "CRITICAL: Bengaluru UV Index hit 13 today (Extreme). Stay indoors 11AM-3PM.",
-        "metro": "BMRCL update: 16km KR Puram-Hoskote Double-Decker Metro study includes TC Palaya Gate station.",
-        "water": "BWSSB mapping: KR Puram & Ramamurthy Nagar identified as high-alert water-stress zones.",
-        "events": "Holi 2026: Major celebrations at Grand Mercure Gopalan Mall (KR Puram) and Runway 27.",
-        "traffic": "Alert: Construction dust & congestion at Hanging Bridge due to Blue Line pillar work."
+        "metro_update": "Namma Metro Phase 4: BMRCL conceptualizing new lines to suburban areas, including KR Puram connectivity.",
+        "traffic_alert": "MG Road Resurfacing: Work begins today on a 2.2km stretch. Expect minor delays during evening hours.",
+        "weather": "Today's Outlook: Clear skies with a high of 32°C. Evenings remain pleasant at 21°C.",
+        "local_events": "Holi 2026: Rain Dance & Foam Party today at Bella House Go Go, KR Puram. Music starts at 6 PM.",
+        "community": "Infrastructure: Traffic police propose 101 new skywalks across Bengaluru junctions to improve pedestrian safety."
     }
 
 def main():
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
     if not api_key:
-        print("❌ ERROR: GEMINI_API_KEY missing in Environment Variables")
+        print("❌ ERROR: GEMINI_API_KEY missing.")
         sys.exit(1)
 
     news_data = get_latest_news_context()
@@ -21,51 +21,35 @@ def main():
     out_dir = pathlib.Path("output")
     out_dir.mkdir(exist_ok=True)
 
-    # Use the stable 2026 endpoint for Gemini 1.5 Flash
     gen_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
     
     news_bullets = "\n".join([f"- {v}" for v in news_data.values()])
     prompt = (
-        f"Today is {today_iso}. You are the News Editor for 'Namma KR Puram'.\n"
-        f"DATA:\n{news_bullets}\n\n"
-        "TASK: Create a professional local news bulletin for residents. No marketing.\n"
-        "FORMAT: Markdown with sections for Facebook, WhatsApp, and Instagram."
+        f"Today is {today_iso}. You are the Community News Editor for 'Namma KR Puram'.\n"
+        f"LATEST UPDATES:\n{news_bullets}\n\n"
+        "TASK: Create a friendly local bulletin. Focus on helpful info for residents.\n"
+        "SECTIONS: 1. Facebook Post (with local question), 2. WhatsApp Alert, 3. Instagram Tags.\n"
+        "Avoid any alarming or sensitive language."
     )
 
-    # Safety Settings to prevent the KeyError: 'candidates' when reporting sensitive news
-    payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "safetySettings": [
-            {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}
-        ]
-    }
+    payload = {"contents": [{"parts": [{"text": prompt}]}]}
 
     try:
         response = requests.post(gen_url, json=payload, timeout=60)
         response.raise_for_status()
         data = response.json()
 
-        # Check if the model actually returned a response
         if "candidates" in data and data["candidates"]:
             main_text = data["candidates"][0]["content"]["parts"][0]["text"]
-            
-            # Save the file
             filename = out_dir / f"{today_iso}.md"
             filename.write_text(main_text, encoding="utf-8")
-            print(f"✅ Success: Saved daily news to {filename}")
+            print(f"✅ Success: News generated at {filename}")
         else:
-            # This helps debug why 'candidates' was missing
-            print("⚠️ API Response contained no candidates. Check safety filters or prompt.")
-            print("Response details:", data.get("promptFeedback", "No feedback provided"))
+            print("❌ No content generated. Check API status.")
             sys.exit(1)
 
-    except requests.exceptions.RequestException as e:
-        print(f"❌ API Request Failed: {e}")
-        if response is not None:
-            print("Server Response:", response.text)
+    except Exception as e:
+        print(f"❌ Error: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":
