@@ -38,7 +38,7 @@ jobs:
           git config user.name "marketing-bot"
           git config user.email "marketing-bot@users.noreply.github.com"
           
-          git add output/*.txt
+          git add output/*.md
 
           # Only commit if there are changes
           if git diff --cached --quiet; then
