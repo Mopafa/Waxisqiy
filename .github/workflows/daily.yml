@@ -13,6 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # fetch-depth: 0 ensures the bot sees the full history for a clean rebase
+          fetch-depth: 0
 
       - name: Run generator
         env:
@@ -21,10 +24,24 @@ jobs:
           python3 -m pip install --upgrade pip requests
           python3 scripts/generate_daily.py
 
-      - name: Commit output
+      - name: Commit and Push output
         run: |
           git config user.name "marketing-bot"
           git config user.email "marketing-bot@users.noreply.github.com"
+          
+          # Stage only the new markdown files
           git add output/*.md
-          git commit -m "Daily marketing content $(date -u +%Y-%m-%d)" || exit 0
-          git push
+          
+          # Check if there are changes to commit to avoid errors
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          git commit -m "Daily news content $(date -u +%Y-%m-%d)"
+          
+          # Pull latest changes and rebase your new commit on top of them
+          git pull --rebase origin main
+          
+          # Push the integrated changes
+          git push origin main
