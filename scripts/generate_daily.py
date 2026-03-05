@@ -38,12 +38,13 @@ def main():
         "models/gemini-1.0-pro",
         "models/gemini-pro",
         "models/text-bison-001",
+        "models/gemini-2.5-flash",
     ]
 
     chosen = next((p for p in preferred_order if p in supported), supported[0])
     print("Chosen model:", chosen)
 
-    # 2) Generate news content
+    # 2) Generate KR Puram news content
     gen_url = f"https://generativelanguage.googleapis.com/v1beta/{chosen}:generateContent"
     prompt_text = (
         "You are a local news reporter for KR Puram, Bangalore.\n\n"
@@ -62,11 +63,7 @@ def main():
 
     payload = {
         "contents": [
-            {
-                "parts": [
-                    {"text": prompt_text}
-                ]
-            }
+            {"parts": [{"text": prompt_text}]}
         ]
     }
 
@@ -79,7 +76,8 @@ def main():
 
     data = r.json()
     try:
-        news_text = data["candidates"][0]["content"][0]["parts"][0]["text"]
+        # FIXED: access content correctly as dict, not list
+        news_text = data["candidates"][0]["content"]["parts"][0]["text"]
     except Exception as e:
         print("ERROR parsing Gemini response:", e)
         print("Full response:", data)
