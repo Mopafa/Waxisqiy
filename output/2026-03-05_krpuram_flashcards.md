@@ -1,31 +1,31 @@
-Here are 10 key words or phrases for flashcards, summarizing today's news for KR Puram residents:
+Here are 10 key words or phrases summarizing today's news for flashcards:
 
-- Front: Old Madras Rd Delays
-- Back: Expect slow traffic this morning near the Byappanahalli Metro Station underpass due to a minor vehicle breakdown. Commuters are advised to seek alternative routes if possible.
+- Front: Old Madras Road Accident
+- Back: Heavy congestion was reported on Old Madras Road near the Mahadevapura junction this morning following a multi-vehicle fender bender. Traffic was slow for over three hours. [link](https://example.com/old-madras-mishap)
 
-- Front: TC Palya Rd Closures
-- Back: A section of TC Palya Road will experience intermittent single-lane closures between 10 AM and 2 PM today for urgent drainage repair work. Please drive with caution.
+- Front: ORR Truck Slowdown
+- Back: A disabled truck caused significant slowdowns eastbound on the Outer Ring Road near the KR Puram Underpass from 11 AM to 1 PM today. The vehicle has since been cleared. [link](https://example.com/orr-truck-cleared)
 
-- Front: Clear & Warm Day
-- Back: Residents can expect a clear and warm day with moderate humidity. No significant chance of rain is predicted for today.
+- Front: KR Puram Dust Storm
+- Back: A brief but intense dust storm swept through parts of KR Puram and surrounding areas between 3:00 PM and 3:30 PM today, reducing visibility. Skies are now clear. [link](https://example.com/krpuram-dust-storm)
 
-- Front: Healthy Heart Camp
-- Back: Join the free "Healthy Heart Camp" at the Government Primary Health Center from 9 AM to 4 PM today for basic check-ups like blood pressure and sugar tests.
+- Front: Library Corner Inaugurated
+- Back: The new "Children's Story Corner" at the KR Puram Public Library was officially inaugurated this morning, featuring new book collections and reading spaces. [link](https://example.com/library-corner-open)
 
-- Front: Temple Annadhanam
-- Back: The Sri Vinayaka Temple near KR Puram Market is hosting a special community meal from 12 PM to 2 PM today as part of its annual spring festivities. All are welcome.
+- Front: Pottery Workshop Concludes
+- Back: A specialized one-day pottery workshop for beginners successfully concluded this evening at the Banyan Tree Community Hall, attracting over 30 local participants. [link](https://example.com/pottery-workshop-today)
 
-- Front: Garden City Power Cut
-- Back: A scheduled power shutdown will affect parts of Garden City Layout and surrounding areas from 10 AM to 3 PM for essential maintenance work. Residents should make necessary arrangements.
+- Front: Kaggadasapura Water Disruption
+- Back: Residents in parts of Kaggadasapura experienced intermittent water supply disruptions today from 9 AM to 4 PM due to an urgent pipeline repair. Supply is now restored. [link](https://example.com/kaggadasapura-water)
 
-- Front: Green Drive Registration
-- Back: Volunteer registration for the new "KR Puram Green Drive" kicks off today at the KR Puram Ward Office between 10 AM and 5 PM for upcoming beautification projects.
+- Front: TC Palya Road Closure
+- Back: A section of TC Palya Road near the Government School was temporarily closed for emergency road patching from 10 AM to 2 PM today. It is now open for traffic. [link](https://example.com/tc-palya-patch)
 
-- Front: Byappanahalli Underpass Jam
-- Back: A vehicle breakdown around 7:45 AM is causing traffic congestion near the Byappanahalli Metro Station underpass on Old Madras Road. Police are on site.
+- Front: KR Puram Talent Show Success
+- Back: The "KR Puram's Got Talent" one-day community showcase concluded tonight at the Ayyappa Temple grounds with a large turnout. [link](https://example.com/krpuram-talent-show)
 
-- Front: Ayyappa Temple Road Work
-- Back: Urgent drainage repair work on TC Palya Road near the Ayyappa Temple will lead to intermittent single-lane closures. Follow diversion signs and drive carefully.
+- Front: Diverse Talent Performances
+- Back: The "KR Puram's Got Talent" event today featured a wide range of diverse performances from local community members. [link](https://example.com/krpuram-talent-show)
 
-- Front: Peak Temp 32°C Today
-- Back: Temperatures in KR Puram are expected to reach a high of around 32°C this afternoon, with a pleasant evening dropping to approximately 20°C.
+- Front: Market Mural Completed
+- Back: Local artists today completed a new mural near the KR Puram Market, depicting local history and culture as part of the "Beautify Our Streets" initiative. [link](https://example.com/market-mural-done)
