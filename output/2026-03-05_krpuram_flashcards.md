@@ -1,31 +1,29 @@
-Here are 10 key words or phrases from the news, summarized for residents:
+- Front: Traffic Congestion
+- Back: Expect heavy morning traffic on Old Madras Road (Tin Factory, Mahadevapura) and near KR Puram Market signal. Allow extra travel time towards ORR.
 
-- Front: Old Madras Road Traffic
-- Back: Heavy traffic is expected on Old Madras Road, particularly near the Tin Factory flyover and KR Puram Railway Station. Plan for delays in your morning commute.
+- Front: Hoodi Diversion
+- Back: A minor diversion is in place near the Hoodi Junction flyover approach due to utility work. Please use service roads and anticipate slight delays in this area.
 
-- Front: ORR Peak Congestion
-- Back: The Outer Ring Road from Mahadevapura towards Marathahalli is experiencing its usual peak hour congestion. Allow extra travel time if you are heading in this direction.
+- Front: Warm Weather
+- Back: Today will be warm with clear skies, ranging from 22°C to 34°C. Remember to stay hydrated and take precautions if you're outdoors during peak sun hours.
 
-- Front: Clear & Sunny Weather
-- Back: KR Puram will enjoy clear skies today with temperatures reaching a maximum of 32°C. It will be a sunny and pleasant day.
+- Front: Temple Festival
+- Back: The annual Kote Maramma Temple 'Jatre' celebrations start today. Expect increased foot traffic and a festive atmosphere around the temple, with evening cultural programs from 6 PM.
 
-- Front: Swachh KR Puram Drive
-- Back: A cleanliness drive is underway this morning in Block 7, near the Corporation Office. Residents are encouraged to participate or support the initiative.
+- Front: Free Health Camp
+- Back: A free health check-up camp for seniors is being held today from 10 AM to 1 PM at the Community Hall near the Post Office. No prior registration is required.
 
-- Front: Free Health Check-up
-- Back: A complimentary general health check-up camp is open until 1:00 PM today at the Government Primary Health Centre in Vengayyanapalya. This is a great opportunity for a quick health assessment.
+- Front: Power Outage
+- Back: BESCOM has scheduled power maintenance today from 10 AM to 2 PM in parts of Devasandra, Bhattarahalli, and Vijnana Nagar. Please plan for disruptions in these areas.
 
-- Front: Scheduled Power Cut
-- Back: Parts of Dooravani Nagar and Ramamurthy Nagar will experience a power shutdown for maintenance from 10:00 AM to 2:00 PM. Please plan accordingly for this outage.
+- Front: Theft Alert
+- Back: Residents are reminded to be vigilant against opportunistic theft, particularly chain snatching, around market areas. Always ensure your valuables are secured.
 
-- Front: Low Water Pressure Alert
-- Back: Residents along KR Puram Lake Road and surrounding areas may experience low water pressure this afternoon due to urgent pipeline repairs. Please conserve water if you are in these areas.
+- Front: Lake Track Opening
+- Back: The renovated KR Puram Lake jogging track will be officially opened to the public this evening at 5 PM, with the local corporator present.
 
-- Front: Market Pickpocket Warning
-- Back: Residents are urged to be cautious of unattended bags and pickpockets in crowded market areas, especially near the KR Puram Market. Keep your belongings secure.
+- Front: Farmers' Market
+- Back: The local farmers' market near Garden City College is open today from 8 AM to 1 PM, offering fresh produce from nearby farms.
 
-- Front: New Ayyappa Nagar Streetlights
-- Back: The KR Puram Residents' Welfare Association (RWA) has successfully installed new LED streetlights on the main stretch of Ayyappa Nagar. This will improve visibility and safety.
-
-- Front: Waste Segregation Campaign
-- Back: The BBMP is seeking active participation from residents in Ward 54 for its ongoing waste segregation awareness campaign. Proper waste segregation benefits the community.
+- Front: Green KR Puram
+- Back: Congratulations to the "Green KR Puram" initiative for successfully completing their tree-planting drive along the railway parallel road last weekend.
