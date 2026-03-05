@@ -1,6 +1,7 @@
-import os, requests, datetime, pathlib, sys
+import os, requests, datetime, pathlib, sys, base64
 
 def fetch_gemini_content(prompt_text, headers, model):
+    """Generate text content using Gemini models."""
     gen_url = f"https://generativelanguage.googleapis.com/v1beta/{model}:generateContent"
     payload = {"contents": [{"parts": [{"text": prompt_text}]}]}
     r = requests.post(gen_url, headers=headers, json=payload, timeout=60)
@@ -20,10 +21,7 @@ def fetch_gemini_content(prompt_text, headers, model):
 def generate_image_from_text(text, headers, model, filename):
     """Generate an image from text using Gemini Image Generation API."""
     gen_url = f"https://generativelanguage.googleapis.com/v1beta/{model}:generateImage"
-    payload = {
-        "prompt": text,
-        "size": "1024x1024"
-    }
+    payload = {"prompt": text, "size": "1024x1024"}
     r = requests.post(gen_url, headers=headers, json=payload, timeout=60)
     if r.status_code != 200:
         print("ERROR generating image")
@@ -32,8 +30,6 @@ def generate_image_from_text(text, headers, model, filename):
         return
     data = r.json()
     try:
-        # The image is usually returned as base64
-        import base64
         img_b64 = data["artifacts"][0]["binary"]
         img_bytes = base64.b64decode(img_b64)
         with open(filename, "wb") as f:
@@ -50,8 +46,9 @@ def main():
         sys.exit(1)
     headers = {"X-goog-api-key": key}
 
-    # Choose model for text
+    # Choose Gemini model
     text_model = "models/gemini-2.5-flash"
+    image_model = "models/gemini-2.5-flash-image"
 
     # 1) Generate KR Puram news
     news_prompt = (
@@ -69,17 +66,36 @@ def main():
     news_file.write_text(news_text, encoding="utf-8")
     print(f"✅ KR Puram news saved at {news_file}")
 
-    # 2) Generate 10-word flash for image
-    flash_prompt = f"Summarize the following KR Puram news in 10 words for a single news flash:\n{news_text}"
-    news_flash = fetch_gemini_content(flash_prompt, headers, text_model).strip().replace("\n", " ")
+    # 2) Generate flashcards (10 key words/phrases)
+    flashcard_prompt = (
+        f"Summarize the following news into 10 key words or phrases for flashcards.\n"
+        f"For each, provide a short explanation (1–2 sentences) suitable for residents.\n\n"
+        f"News content:\n{news_text}\n\n"
+        "Output in Markdown format:\n"
+        "- Front: <word/phrase>\n"
+        "- Back: <explanation>"
+    )
+    flashcards_text = fetch_gemini_content(flashcard_prompt, headers, text_model)
 
-    # 3) Generate image with news flash
+    flash_file = out_dir / f"{datetime.date.today().isoformat()}_krpuram_flashcards.md"
+    flash_file.write_text(flashcards_text, encoding="utf-8")
+    print(f"✅ KR Puram flashcards saved at {flash_file}")
+
+    # 3) Generate 10-word news flash with source
+    source_text = "Source: KR Puram Local News / Deccan Herald"
+    flash_prompt = (
+        f"Summarize the following KR Puram news in 10 words for a single news flash.\n"
+        f"Include the source at the end in the format 'Source: ...'.\n"
+        f"News content:\n{news_text}"
+    )
+    news_flash = fetch_gemini_content(flash_prompt, headers, text_model).strip().replace("\n", " ")
+    if source_text not in news_flash:
+        news_flash += f" ({source_text})"
+
+    # 4) Generate image for news flash
     image_dir = out_dir / "images" / datetime.date.today().isoformat()
     image_dir.mkdir(parents=True, exist_ok=True)
     image_file = image_dir / "krpuram_news_flash.png"
-
-    # Use Gemini Image model for generation
-    image_model = "models/gemini-2.5-flash-image"
     generate_image_from_text(news_flash, headers, image_model, image_file)
 
 if __name__ == "__main__":
