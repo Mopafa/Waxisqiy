@@ -1,38 +1,36 @@
-import os, requests, datetime, pathlib, sys
+import os
+import requests
+import datetime
+import pathlib
+import sys
+import time
+import feedparser
 
-def get_latest_news_context():
-    """Community news context for March 5, 2026."""
-    return {
-        "metro": "BMRCL update: Phase 4 expansion conceptualizing new suburban links near KR Puram.",
-        "traffic": "MG Road: Roadwork begins today between Trinity and Cubbon Park. Expect evening slows.",
-        "weather": "Sunny with a high of 32°C. Local UV Index is high—stay hydrated!",
-        "events": "Holi 2026: Rain dance celebrations at KR Puram local clubs starting 6PM.",
-        "infrastructure": "New skywalks proposed for pedestrian safety across 101 city junctions."
-    }
+def fetch_local_news_rss(rss_url):
+    """Fetch latest news entries from an RSS feed."""
+    feed = feedparser.parse(rss_url)
+    news_items = []
+    for entry in feed.entries[:10]:  # Get the latest 10 news items
+        title = entry.get("title", "").strip()
+        summary = entry.get("summary", "").strip()
+        if title or summary:
+            news_items.append(f"{title}: {summary}" if summary else title)
+    return news_items
 
-def main():
-    api_key = os.getenv("GEMINI_API_KEY", "").strip()
-    if not api_key:
-        print("❌ ERROR: GEMINI_API_KEY environment variable is empty.")
-        sys.exit(1)
-
-    news_data = get_latest_news_context()
+def generate_prompt(news_items):
+    """Generate a concise prompt for Gemini summarization."""
     today_iso = datetime.date.today().isoformat()
-    out_dir = pathlib.Path("output")
-    out_dir.mkdir(exist_ok=True)
-
-    # Global endpoint for better quota stability in 2026
-    gen_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
-    
-    news_bullets = "\n".join([f"- {v}" for v in news_data.values()])
-    prompt = (
-        f"Today is {today_iso}. Act as the News Editor for 'Namma KR Puram'.\n"
-        f"NEWS DATA:\n{news_bullets}\n\n"
-        "TASK: Create a professional local community bulletin for residents.\n"
-        "FORMAT: Markdown. Include sections for Facebook and WhatsApp."
+    news_text = "\n".join([f"- {item}" for item in news_items])
+    return (
+        f"Today is {today_iso}. You are the News Editor for KR Puram.\n"
+        f"Here are the latest local news snippets:\n{news_text}\n\n"
+        "TASK: Create a clean, concise local news bulletin suitable for residents.\n"
+        "FORMAT: Plain text. Only news content, no commentary."
     )
 
-    # 1. ADD SAFETY SETTINGS: This prevents the 'candidates' key from disappearing
+def call_gemini(prompt, api_key, max_retries=3):
+    """Call Gemini API and return summarized news."""
+    gen_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
         "safetySettings": [
@@ -43,33 +41,58 @@ def main():
         ]
     }
 
-    try:
-        response = requests.post(gen_url, json=payload, timeout=60)
-        response.raise_for_status()
-        data = response.json()
+    for attempt in range(1, max_retries + 1):
+        try:
+            response = requests.post(gen_url, json=payload, timeout=60)
+            response.raise_for_status()
+            data = response.json()
 
-        # 2. DEFENSIVE CHECK: Don't crash if 'candidates' is missing
-        if "candidates" in data and len(data["candidates"]) > 0:
-            candidate = data["candidates"][0]
-            
-            # Check for the finishReason (usually 'SAFETY' or 'STOP')
-            if candidate.get("finishReason") == "SAFETY":
-                print("⚠️ API blocked this content due to safety filters.")
-                sys.exit(1)
+            candidates = data.get("candidates")
+            if candidates and len(candidates) > 0:
+                candidate = candidates[0]
+                if candidate.get("finishReason") == "SAFETY":
+                    print("⚠️ API blocked content due to safety filters.")
+                    return None
+                return candidate["content"]["parts"][0]["text"]
+            else:
+                print(f"⚠️ Attempt {attempt}: 'candidates' missing or empty. Response: {data.get('error')}")
+                if attempt < max_retries:
+                    time.sleep(5 * attempt)
+                else:
+                    return None
+        except requests.exceptions.RequestException as e:
+            print(f"⚠️ Attempt {attempt}: API request failed: {e}")
+            if attempt < max_retries:
+                time.sleep(5 * attempt)
+            else:
+                return None
+    return None
 
-            main_text = candidate["content"]["parts"][0]["text"]
-            filename = out_dir / f"{today_iso}.md"
-            filename.write_text(main_text, encoding="utf-8")
-            print(f"✅ Success: Daily news generated at {filename}")
-        else:
-            # Helpful debugging for the KeyError
-            print("❌ Error: API response succeeded but 'candidates' list is missing/empty.")
-            print(f"Prompt Feedback: {data.get('promptFeedback', 'No feedback provided')}")
-            sys.exit(1)
-
-    except requests.exceptions.RequestException as e:
-        print(f"❌ API Request Failed: {e}")
+def main():
+    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    if not api_key:
+        print("❌ ERROR: GEMINI_API_KEY environment variable is empty.")
         sys.exit(1)
+
+    # Replace this with any KR Puram / Bengaluru RSS feed
+    rss_feed_url = "https://www.deccanherald.com/rss/local-bengaluru-news.xml"
+
+    news_items = fetch_local_news_rss(rss_feed_url)
+    if not news_items:
+        print("❌ No local news found in RSS feed.")
+        sys.exit(1)
+
+    prompt = generate_prompt(news_items)
+    summarized_news = call_gemini(prompt, api_key)
+    if not summarized_news:
+        print("❌ Failed to fetch summarized news from Gemini.")
+        sys.exit(1)
+
+    out_dir = pathlib.Path("output")
+    out_dir.mkdir(exist_ok=True)
+    filename = out_dir / f"{datetime.date.today().isoformat()}.txt"
+    filename.write_text(summarized_news, encoding="utf-8")
+    print(f"✅ Local news collected and summarized from Gemini at {filename}")
 
 if __name__ == "__main__":
     main()
