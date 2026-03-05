@@ -1,12 +1,61 @@
 import os, requests, datetime, pathlib, sys, base64
+from bs4 import BeautifulSoup
 
+# ---------------------------
+# Helper: Fetch real news
+# ---------------------------
+def fetch_real_news(api_key, query):
+    url = "https://newsapi.org/v2/everything"
+    params = {
+        "q": query,
+        "language": "en",
+        "sortBy": "publishedAt",
+        "pageSize": 10,
+        "apiKey": api_key
+    }
+    r = requests.get(url, params=params, timeout=30)
+    if r.status_code != 200:
+        print("News API ERROR:", r.status_code, r.text)
+        return []
+    data = r.json()
+    return [{"title": a["title"], "url": a["url"], "description": a.get("description","")} for a in data.get("articles",[])]
+
+# ---------------------------
+# Helper: Fetch rentals / sales (scraping example from MagicBricks)
+# ---------------------------
+def fetch_real_estate(query="KR Puram Bengaluru"):
+    url = f"https://www.magicbricks.com/property-for-rent/residential-real-estate?searchLocation={query.replace(' ','%20')}"
+    headers = {"User-Agent": "Mozilla/5.0"}
+    r = requests.get(url, headers=headers, timeout=30)
+    if r.status_code != 200:
+        print("Real Estate fetch failed:", r.status_code)
+        return []
+    
+    soup = BeautifulSoup(r.text, "html.parser")
+    listings = []
+    for card in soup.select(".mb-srp__card"):
+        title_tag = card.select_one(".mb-srp__card__title")
+        price_tag = card.select_one(".mb-srp__card__price")
+        link_tag = card.select_one("a[href]")
+        if title_tag and price_tag and link_tag:
+            listings.append({
+                "title": title_tag.text.strip(),
+                "price": price_tag.text.strip(),
+                "url": "https://www.magicbricks.com" + link_tag['href']
+            })
+        if len(listings) >= 10:  # limit to 10
+            break
+    return listings
+
+# ---------------------------
+# Gemini content generation
+# ---------------------------
 def fetch_gemini_content(prompt_text, headers, model):
-    """Generate text content using Gemini models."""
     gen_url = f"https://generativelanguage.googleapis.com/v1beta/{model}:generateContent"
     payload = {"contents": [{"parts": [{"text": prompt_text}]}]}
     r = requests.post(gen_url, headers=headers, json=payload, timeout=60)
     if r.status_code != 200:
-        print("ERROR generating content")
+        print("ERROR generating Gemini content")
         print("STATUS:", r.status_code)
         print("BODY:", r.text[:2000])
         sys.exit(1)
@@ -19,7 +68,6 @@ def fetch_gemini_content(prompt_text, headers, model):
         sys.exit(1)
 
 def generate_image_from_text(text, headers, model, filename):
-    """Generate an image from text using Gemini Image Generation API."""
     gen_url = f"https://generativelanguage.googleapis.com/v1beta/{model}:generateImage"
     payload = {"prompt": text, "size": "1024x1024"}
     r = requests.post(gen_url, headers=headers, json=payload, timeout=60)
@@ -39,64 +87,78 @@ def generate_image_from_text(text, headers, model, filename):
         print("ERROR parsing image response:", e)
         print("Full response:", data)
 
+# ---------------------------
+# Main Automation
+# ---------------------------
 def main():
-    key = os.getenv("GEMINI_API_KEY", "").strip()
-    if not key:
-        print("ERROR: GEMINI_API_KEY secret is missing")
+    news_api_key = os.getenv("NEWS_API_KEY", "").strip()
+    gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
+    if not news_api_key or not gemini_key:
+        print("ERROR: Both NEWS_API_KEY and GEMINI_API_KEY are required")
         sys.exit(1)
-    headers = {"X-goog-api-key": key}
-
+    
+    headers = {"X-goog-api-key": gemini_key}
+    today_str = datetime.date.today().isoformat()
+    
     text_model = "models/gemini-2.5-flash"
     image_model = "models/gemini-2.5-flash-image"
-
-    today_str = datetime.date.today().isoformat()
-
-    # --- 1) Generate strictly today KR Puram news with links ---
-    news_prompt = (
-        f"You are a local news reporter for KR Puram, Bangalore.\n"
-        f"ONLY include news and events that happen TODAY ({today_str}).\n"
-        "Do NOT include recurring, past, or speculative events.\n"
-        "Generate in sections: Traffic, Weather, Local Events, Alerts, Community Updates.\n"
-        "For each news item, include a **simulated source link** in the format [link](https://example.com/<short-title>).\n"
-        "Output plain text, concise, suitable for residents."
-    )
-    news_text = fetch_gemini_content(news_prompt, headers, text_model)
-
-    # Save news
+    
+    # ---------------------------
+    # 1) Fetch Live News
+    # ---------------------------
+    news_articles = fetch_real_news(news_api_key, "KR Puram Bengaluru")
+    news_block = ""
+    for i, a in enumerate(news_articles):
+        news_block += f"{i+1}. {a['title']} ({a['url']})\n"
+        if a.get("description"):
+            news_block += f"   {a['description']}\n\n"
+    
+    # ---------------------------
+    # 2) Fetch Real Estate Listings
+    # ---------------------------
+    real_estate_listings = fetch_real_estate()
+    estate_block = ""
+    for i, r in enumerate(real_estate_listings):
+        estate_block += f"{i+1}. {r['title']} - {r['price']} ({r['url']})\n"
+    
+    # ---------------------------
+    # 3) Generate combined summary via Gemini
+    # ---------------------------
+    combined_prompt = f"""
+    Summarize the following KR Puram updates for residents:
+    
+    NEWS ARTICLES:
+    {news_block}
+    
+    RENTALS & PROPERTIES FOR SALE:
+    {estate_block}
+    
+    Include key points, title, price (if applicable), and real URLs. 
+    Output in concise format suitable for a daily social media post.
+    """
+    combined_summary = fetch_gemini_content(combined_prompt, headers, text_model)
+    
+    # ---------------------------
+    # 4) Save summary
+    # ---------------------------
     out_dir = pathlib.Path("output")
     out_dir.mkdir(exist_ok=True)
-    news_file = out_dir / f"{today_str}_krpuram_news.md"
-    news_file.write_text(news_text, encoding="utf-8")
-    print(f"✅ KR Puram news saved at {news_file}")
-
-    # --- 2) Generate flashcards (10 key words/phrases) with links ---
-    flashcard_prompt = (
-        f"Summarize the following news into 10 key words or phrases for flashcards.\n"
-        f"Each phrase must reference today's events ({today_str}) and include the same source link as in the news.\n"
-        f"Provide 1–2 sentence explanation per phrase.\n\n"
-        f"News content:\n{news_text}\n\n"
-        "Output in Markdown format:\n"
-        "- Front: <word/phrase>\n"
-        "- Back: <explanation> [link](https://example.com/<short-title>)"
-    )
-    flashcards_text = fetch_gemini_content(flashcard_prompt, headers, text_model)
-
-    flash_file = out_dir / f"{today_str}_krpuram_flashcards.md"
-    flash_file.write_text(flashcards_text, encoding="utf-8")
-    print(f"✅ KR Puram flashcards saved at {flash_file}")
-
-    # --- 3) Generate 10-word news flash with date and links ---
-    flash_prompt = (
-        f"Summarize the following KR Puram news in 10 words for a single news flash.\n"
-        f"Include today's date ({today_str}) and the source links from the news in the format [link](https://example.com/<short-title>).\n"
-        f"News content:\n{news_text}"
-    )
-    news_flash = fetch_gemini_content(flash_prompt, headers, text_model).strip().replace("\n", " ")
-
-    # --- 4) Generate image for news flash ---
+    summary_file = out_dir / f"{today_str}_krpuram_daily.md"
+    summary_file.write_text(combined_summary, encoding="utf-8")
+    print(f"✅ Daily KR Puram summary saved at {summary_file}")
+    
+    # ---------------------------
+    # 5) Generate social media 10-word news flash
+    # ---------------------------
+    flash_prompt = f"Summarize the above KR Puram updates in 10 words max, include URLs if possible."
+    news_flash = fetch_gemini_content(flash_prompt, headers, text_model).strip().replace("\n"," ")
+    
+    # ---------------------------
+    # 6) Generate image
+    # ---------------------------
     image_dir = out_dir / "images" / today_str
     image_dir.mkdir(parents=True, exist_ok=True)
-    image_file = image_dir / "krpuram_news_flash.png"
+    image_file = image_dir / "krpuram_daily_flash.png"
     generate_image_from_text(news_flash, headers, image_model, image_file)
 
 if __name__ == "__main__":
