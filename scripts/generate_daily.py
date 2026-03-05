@@ -9,45 +9,54 @@ import json
 # -------------------------------
 # FUNCTIONS
 # -------------------------------
-def call_gemini(prompt, api_key, max_retries=3):
-    """Call Gemini API and return content safely."""
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
-    payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "safetySettings": [
-            {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-            {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}
+
+def call_gemini_with_fallback(prompt, api_key, models=None, max_retries=3):
+    """Call Gemini API using multiple models until one succeeds."""
+    if models is None:
+        models = [
+            "gemini-2.5-flash",
+            "gemini-2.5-flash-lite",
+            "gemini-2.5-pro",
+            "gemini-2.0-flash",
         ]
-    }
 
-    for attempt in range(1, max_retries + 1):
-        try:
-            r = requests.post(url, json=payload, timeout=60)
-            r.raise_for_status()
-            data = r.json()
+    for model in models:
+        print(f"🔍 Trying Gemini model: {model}")
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+        headers = {
+            "x-goog-api-key": api_key,
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "candidateCount": 1
+        }
 
-            # Defensive access
-            candidates = data.get("candidates")
-            if not candidates:
-                print(f"⚠️ Attempt {attempt}: 'candidates' missing. Full response:\n{json.dumps(data, indent=2)}")
-                if attempt < max_retries:
-                    time.sleep(5 * attempt)
-                continue
+        for attempt in range(1, max_retries + 1):
+            try:
+                r = requests.post(url, headers=headers, json=payload, timeout=60)
+                r.raise_for_status()
+                data = r.json()
 
-            candidate = candidates[0]
-            if candidate.get("finishReason") == "SAFETY":
-                print("⚠️ API blocked content due to safety filters.")
-                return None
+                candidates = data.get("candidates")
+                if candidates and len(candidates) > 0:
+                    candidate = candidates[0]
+                    if candidate.get("finishReason") == "SAFETY":
+                        print(f"⚠️ API blocked content due to safety filters for model {model}.")
+                        return None
+                    return candidate.get("content", [{}])[0].get("parts", [{}])[0].get("text")
 
-            return candidate.get("content", {}).get("parts", [{}])[0].get("text")
+                print(f"⚠️ Missing candidates for {model}, full response:\n{json.dumps(data, indent=2)}")
+                break  # Move to next model
 
-        except requests.exceptions.RequestException as e:
-            print(f"⚠️ Attempt {attempt}: Request failed: {e}")
-            if attempt < max_retries:
-                time.sleep(5 * attempt)
-
+            except requests.exceptions.HTTPError as e:
+                if r.status_code == 404:
+                    print(f"❌ Model {model} not found (404). Trying next model.")
+                    break
+                print(f"⚠️ Attempt {attempt} failed for {model}: {e}")
+            except Exception as e:
+                print(f"⚠️ General error with {model}: {e}")
+            time.sleep(5 * attempt)  # Exponential backoff
     return None
 
 # -------------------------------
@@ -59,11 +68,10 @@ def main():
         print("❌ ERROR: GEMINI_API_KEY environment variable is empty.")
         sys.exit(1)
 
-    # Prompt for KR Puram news today
     today_iso = datetime.date.today().isoformat()
     prompt = f"Today is {today_iso}. Give me a concise list of the latest local news in KR Puram, Bengaluru. Format: plain text, only news content."
 
-    summarized_news = call_gemini(prompt, api_key)
+    summarized_news = call_gemini_with_fallback(prompt, api_key)
     if not summarized_news:
         print("❌ Failed to fetch news from Gemini.")
         sys.exit(1)
