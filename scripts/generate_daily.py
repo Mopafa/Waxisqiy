@@ -4,7 +4,7 @@ import datetime
 import pathlib
 import sys
 import time
-import feedparser
+import feedparser  # Make sure this is installed: python3 -m pip install feedparser
 import json
 
 # -------------------------------
@@ -16,7 +16,6 @@ RSS_FEEDS = [
     "https://www.newindianexpress.com/feeds/metros/bengaluru.xml",
     "https://www.timesofindia.indiatimes.com/rssfeeds/2959238.cms",
     "https://bangaloremirror.indiatimes.com/rssfeedstopstories.cms",
-    # Add more local feeds here
 ]
 
 # -------------------------------
@@ -27,7 +26,7 @@ def fetch_local_news_rss(rss_urls, keyword="KR Puram"):
     news_items = []
     for url in rss_urls:
         feed = feedparser.parse(url)
-        for entry in feed.entries[:10]:
+        for entry in feed.entries[:10]:  # latest 10 items per feed
             title = entry.get("title", "").strip()
             summary = entry.get("summary", "").strip()
             text = f"{title}: {summary}" if summary else title
@@ -65,7 +64,7 @@ def call_gemini(prompt, api_key, max_retries=3):
             r.raise_for_status()
             data = r.json()
 
-            # ✅ Defensive access
+            # Defensive access for candidates
             candidates = data.get("candidates")
             if not candidates:
                 print(f"⚠️ Attempt {attempt}: 'candidates' missing. Full response:\n{json.dumps(data, indent=2)}")
@@ -103,7 +102,7 @@ def main():
 
     prompt = generate_prompt(news_items)
 
-    # ✅ Use only the safe Gemini function
+    # Use safe Gemini call
     summarized_news = call_gemini(prompt, api_key)
     if not summarized_news:
         print("❌ Failed to fetch summarized news from Gemini.")
