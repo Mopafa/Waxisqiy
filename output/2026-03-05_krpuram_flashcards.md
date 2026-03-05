@@ -1,29 +1,31 @@
-- Front: Traffic Congestion
-- Back: Expect heavy morning traffic on Old Madras Road (Tin Factory, Mahadevapura) and near KR Puram Market signal. Allow extra travel time towards ORR.
+Here are 10 key words or phrases for flashcards, summarizing today's news for KR Puram residents:
 
-- Front: Hoodi Diversion
-- Back: A minor diversion is in place near the Hoodi Junction flyover approach due to utility work. Please use service roads and anticipate slight delays in this area.
+- Front: Old Madras Rd Delays
+- Back: Expect slow traffic this morning near the Byappanahalli Metro Station underpass due to a minor vehicle breakdown. Commuters are advised to seek alternative routes if possible.
 
-- Front: Warm Weather
-- Back: Today will be warm with clear skies, ranging from 22°C to 34°C. Remember to stay hydrated and take precautions if you're outdoors during peak sun hours.
+- Front: TC Palya Rd Closures
+- Back: A section of TC Palya Road will experience intermittent single-lane closures between 10 AM and 2 PM today for urgent drainage repair work. Please drive with caution.
 
-- Front: Temple Festival
-- Back: The annual Kote Maramma Temple 'Jatre' celebrations start today. Expect increased foot traffic and a festive atmosphere around the temple, with evening cultural programs from 6 PM.
+- Front: Clear & Warm Day
+- Back: Residents can expect a clear and warm day with moderate humidity. No significant chance of rain is predicted for today.
 
-- Front: Free Health Camp
-- Back: A free health check-up camp for seniors is being held today from 10 AM to 1 PM at the Community Hall near the Post Office. No prior registration is required.
+- Front: Healthy Heart Camp
+- Back: Join the free "Healthy Heart Camp" at the Government Primary Health Center from 9 AM to 4 PM today for basic check-ups like blood pressure and sugar tests.
 
-- Front: Power Outage
-- Back: BESCOM has scheduled power maintenance today from 10 AM to 2 PM in parts of Devasandra, Bhattarahalli, and Vijnana Nagar. Please plan for disruptions in these areas.
+- Front: Temple Annadhanam
+- Back: The Sri Vinayaka Temple near KR Puram Market is hosting a special community meal from 12 PM to 2 PM today as part of its annual spring festivities. All are welcome.
 
-- Front: Theft Alert
-- Back: Residents are reminded to be vigilant against opportunistic theft, particularly chain snatching, around market areas. Always ensure your valuables are secured.
+- Front: Garden City Power Cut
+- Back: A scheduled power shutdown will affect parts of Garden City Layout and surrounding areas from 10 AM to 3 PM for essential maintenance work. Residents should make necessary arrangements.
 
-- Front: Lake Track Opening
-- Back: The renovated KR Puram Lake jogging track will be officially opened to the public this evening at 5 PM, with the local corporator present.
+- Front: Green Drive Registration
+- Back: Volunteer registration for the new "KR Puram Green Drive" kicks off today at the KR Puram Ward Office between 10 AM and 5 PM for upcoming beautification projects.
 
-- Front: Farmers' Market
-- Back: The local farmers' market near Garden City College is open today from 8 AM to 1 PM, offering fresh produce from nearby farms.
+- Front: Byappanahalli Underpass Jam
+- Back: A vehicle breakdown around 7:45 AM is causing traffic congestion near the Byappanahalli Metro Station underpass on Old Madras Road. Police are on site.
 
-- Front: Green KR Puram
-- Back: Congratulations to the "Green KR Puram" initiative for successfully completing their tree-planting drive along the railway parallel road last weekend.
+- Front: Ayyappa Temple Road Work
+- Back: Urgent drainage repair work on TC Palya Road near the Ayyappa Temple will lead to intermittent single-lane closures. Follow diversion signs and drive carefully.
+
+- Front: Peak Temp 32°C Today
+- Back: Temperatures in KR Puram are expected to reach a high of around 32°C this afternoon, with a pleasant evening dropping to approximately 20°C.
