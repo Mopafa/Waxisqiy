@@ -5,20 +5,38 @@ import pathlib
 import sys
 import time
 import feedparser
+import json
 
-def fetch_local_news_rss(rss_url):
-    """Fetch latest news entries from an RSS feed."""
-    feed = feedparser.parse(rss_url)
+# -------------------------------
+# CONFIG: RSS feeds for KR Puram / Bengaluru
+# -------------------------------
+RSS_FEEDS = [
+    "https://www.deccanherald.com/rss/local-bengaluru-news.xml",
+    "https://www.thehindu.com/news/cities/bangalore/feeder/default.rss",
+    "https://www.newindianexpress.com/feeds/metros/bengaluru.xml",
+    "https://www.timesofindia.indiatimes.com/rssfeeds/2959238.cms",
+    "https://bangaloremirror.indiatimes.com/rssfeedstopstories.cms",
+    # Add more local feeds here
+]
+
+# -------------------------------
+# FUNCTIONS
+# -------------------------------
+def fetch_local_news_rss(rss_urls, keyword="KR Puram"):
+    """Fetch latest news items containing keyword from RSS feeds."""
     news_items = []
-    for entry in feed.entries[:10]:  # Get the latest 10 news items
-        title = entry.get("title", "").strip()
-        summary = entry.get("summary", "").strip()
-        if title or summary:
-            news_items.append(f"{title}: {summary}" if summary else title)
+    for url in rss_urls:
+        feed = feedparser.parse(url)
+        for entry in feed.entries[:10]:  # latest 10 items per feed
+            title = entry.get("title", "").strip()
+            summary = entry.get("summary", "").strip()
+            text = f"{title}: {summary}" if summary else title
+            if keyword.lower() in text.lower():  # filter for KR Puram
+                news_items.append(text)
     return news_items
 
 def generate_prompt(news_items):
-    """Generate a concise prompt for Gemini summarization."""
+    """Generate Gemini prompt from news items."""
     today_iso = datetime.date.today().isoformat()
     news_text = "\n".join([f"- {item}" for item in news_items])
     return (
@@ -29,8 +47,8 @@ def generate_prompt(news_items):
     )
 
 def call_gemini(prompt, api_key, max_retries=3):
-    """Call Gemini API and return summarized news."""
-    gen_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    """Call Gemini API and return summarized news safely."""
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
         "safetySettings": [
@@ -43,10 +61,13 @@ def call_gemini(prompt, api_key, max_retries=3):
 
     for attempt in range(1, max_retries + 1):
         try:
-            response = requests.post(gen_url, json=payload, timeout=60)
+            response = requests.post(url, json=payload, timeout=60)
+            if response.status_code == 404:
+                print(f"⚠️ Attempt {attempt}: Endpoint not found (404). Check model name and URL.")
             response.raise_for_status()
             data = response.json()
 
+            # Defensive access to candidates
             candidates = data.get("candidates")
             if candidates and len(candidates) > 0:
                 candidate = candidates[0]
@@ -55,31 +76,28 @@ def call_gemini(prompt, api_key, max_retries=3):
                     return None
                 return candidate["content"]["parts"][0]["text"]
             else:
-                print(f"⚠️ Attempt {attempt}: 'candidates' missing or empty. Response: {data.get('error')}")
+                print(f"⚠️ Attempt {attempt}: 'candidates' missing or empty. Full response:")
+                print(json.dumps(data, indent=2))
                 if attempt < max_retries:
-                    time.sleep(5 * attempt)
-                else:
-                    return None
+                    time.sleep(5 * attempt)  # exponential backoff
         except requests.exceptions.RequestException as e:
-            print(f"⚠️ Attempt {attempt}: API request failed: {e}")
+            print(f"⚠️ Attempt {attempt}: Request failed: {e}")
             if attempt < max_retries:
                 time.sleep(5 * attempt)
-            else:
-                return None
     return None
 
+# -------------------------------
+# MAIN
+# -------------------------------
 def main():
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
     if not api_key:
         print("❌ ERROR: GEMINI_API_KEY environment variable is empty.")
         sys.exit(1)
 
-    # Replace this with any KR Puram / Bengaluru RSS feed
-    rss_feed_url = "https://www.deccanherald.com/rss/local-bengaluru-news.xml"
-
-    news_items = fetch_local_news_rss(rss_feed_url)
+    news_items = fetch_local_news_rss(RSS_FEEDS)
     if not news_items:
-        print("❌ No local news found in RSS feed.")
+        print("❌ No local news found for KR Puram in RSS feeds.")
         sys.exit(1)
 
     prompt = generate_prompt(news_items)
@@ -94,5 +112,8 @@ def main():
     filename.write_text(summarized_news, encoding="utf-8")
     print(f"✅ Local news collected and summarized from Gemini at {filename}")
 
+# -------------------------------
+# ENTRY POINT
+# -------------------------------
 if __name__ == "__main__":
     main()
