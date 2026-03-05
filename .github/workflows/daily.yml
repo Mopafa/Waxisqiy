@@ -26,6 +26,7 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install requests feedparser
+          python3 -m pip install beautifulsoup4
 
       - name: Run generator
         env:
