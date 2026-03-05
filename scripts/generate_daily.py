@@ -51,13 +51,13 @@ def main():
 
     today_str = datetime.date.today().isoformat()
 
-    # --- 1) Generate strictly today KR Puram news ---
+    # --- 1) Generate strictly today KR Puram news with links ---
     news_prompt = (
         f"You are a local news reporter for KR Puram, Bangalore.\n"
         f"ONLY include news and events that happen TODAY ({today_str}).\n"
         "Do NOT include recurring, past, or speculative events.\n"
         "Generate in sections: Traffic, Weather, Local Events, Alerts, Community Updates.\n"
-        "Each section must explicitly reference today's date.\n"
+        "For each news item, include a **simulated source link** in the format [link](https://example.com/<short-title>).\n"
         "Output plain text, concise, suitable for residents."
     )
     news_text = fetch_gemini_content(news_prompt, headers, text_model)
@@ -69,15 +69,15 @@ def main():
     news_file.write_text(news_text, encoding="utf-8")
     print(f"✅ KR Puram news saved at {news_file}")
 
-    # --- 2) Generate flashcards (10 key words/phrases) ---
+    # --- 2) Generate flashcards (10 key words/phrases) with links ---
     flashcard_prompt = (
         f"Summarize the following news into 10 key words or phrases for flashcards.\n"
-        f"Each phrase must be relevant to today's events ({today_str}).\n"
-        f"For each, provide a short explanation (1–2 sentences) suitable for residents.\n\n"
+        f"Each phrase must reference today's events ({today_str}) and include the same source link as in the news.\n"
+        f"Provide 1–2 sentence explanation per phrase.\n\n"
         f"News content:\n{news_text}\n\n"
         "Output in Markdown format:\n"
         "- Front: <word/phrase>\n"
-        "- Back: <explanation>"
+        "- Back: <explanation> [link](https://example.com/<short-title>)"
     )
     flashcards_text = fetch_gemini_content(flashcard_prompt, headers, text_model)
 
@@ -85,16 +85,13 @@ def main():
     flash_file.write_text(flashcards_text, encoding="utf-8")
     print(f"✅ KR Puram flashcards saved at {flash_file}")
 
-    # --- 3) Generate 10-word news flash with date and source ---
-    source_text = f"Source: KR Puram Daily ({today_str})"
+    # --- 3) Generate 10-word news flash with date and links ---
     flash_prompt = (
         f"Summarize the following KR Puram news in 10 words for a single news flash.\n"
-        f"Include today's date ({today_str}) and the source at the end in the format 'Source: ...'.\n"
+        f"Include today's date ({today_str}) and the source links from the news in the format [link](https://example.com/<short-title>).\n"
         f"News content:\n{news_text}"
     )
     news_flash = fetch_gemini_content(flash_prompt, headers, text_model).strip().replace("\n", " ")
-    if source_text not in news_flash:
-        news_flash += f" ({source_text})"
 
     # --- 4) Generate image for news flash ---
     image_dir = out_dir / "images" / today_str
