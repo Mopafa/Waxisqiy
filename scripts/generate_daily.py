@@ -27,29 +27,47 @@ def main():
     prompt = (
         f"Today is {today_iso}. You are the Community News Editor for 'Namma KR Puram'.\n"
         f"LATEST UPDATES:\n{news_bullets}\n\n"
-        "TASK: Create a friendly local bulletin. Focus on helpful info for residents.\n"
-        "SECTIONS: 1. Facebook Post (with local question), 2. WhatsApp Alert, 3. Instagram Tags.\n"
-        "Avoid any alarming or sensitive language."
+        "TASK: Create a friendly local bulletin for residents.\n"
+        "SECTIONS: 1. Facebook Post, 2. WhatsApp Alert, 3. Instagram Tags.\n"
+        "Avoid any alarming language."
     )
 
-    payload = {"contents": [{"parts": [{"text": prompt}]}]}
+    # FIX: Add safetySettings to the payload to prevent silent blocking
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "safetySettings": [
+            {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}
+        ]
+    }
 
     try:
         response = requests.post(gen_url, json=payload, timeout=60)
         response.raise_for_status()
         data = response.json()
 
-        if "candidates" in data and data["candidates"]:
-            main_text = data["candidates"][0]["content"]["parts"][0]["text"]
-            filename = out_dir / f"{today_iso}.md"
-            filename.write_text(main_text, encoding="utf-8")
-            print(f"✅ Success: News generated at {filename}")
+        # FIX: Check if 'candidates' exists and has content before accessing index [0]
+        if "candidates" in data and len(data["candidates"]) > 0:
+            candidate = data["candidates"][0]
+            
+            # Check if the text part actually exists (sometimes it's blocked here)
+            if "content" in candidate and "parts" in candidate["content"]:
+                main_text = candidate["content"]["parts"][0]["text"]
+                filename = out_dir / f"{today_iso}.md"
+                filename.write_text(main_text, encoding="utf-8")
+                print(f"✅ Success: News generated at {filename}")
+            else:
+                print(f"⚠️ Warning: Candidate exists but has no content. Reason: {candidate.get('finishReason')}")
+                sys.exit(1)
         else:
-            print("❌ No content generated. Check API status.")
+            print("❌ No candidates returned. The prompt might have been blocked.")
+            print("Full API Response for debugging:", data)
             sys.exit(1)
 
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"❌ Error during API call: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":
