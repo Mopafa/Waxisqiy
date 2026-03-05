@@ -61,29 +61,30 @@ def call_gemini(prompt, api_key, max_retries=3):
 
     for attempt in range(1, max_retries + 1):
         try:
-            response = requests.post(url, json=payload, timeout=60)
-            if response.status_code == 404:
-                print(f"⚠️ Attempt {attempt}: Endpoint not found (404). Check model name and URL.")
-            response.raise_for_status()
-            data = response.json()
+            r = requests.post(url, json=payload, timeout=60)
+            r.raise_for_status()
+            data = r.json()
 
-            # Defensive access to candidates
+            # ✅ Defensive check for 'candidates'
             candidates = data.get("candidates")
-            if candidates and len(candidates) > 0:
-                candidate = candidates[0]
-                if candidate.get("finishReason") == "SAFETY":
-                    print("⚠️ API blocked content due to safety filters.")
-                    return None
-                return candidate["content"]["parts"][0]["text"]
-            else:
-                print(f"⚠️ Attempt {attempt}: 'candidates' missing or empty. Full response:")
-                print(json.dumps(data, indent=2))
+            if not candidates:
+                print(f"⚠️ Attempt {attempt}: 'candidates' missing. Full response:\n{json.dumps(data, indent=2)}")
                 if attempt < max_retries:
-                    time.sleep(5 * attempt)  # exponential backoff
+                    time.sleep(5 * attempt)
+                continue
+
+            candidate = candidates[0]
+            if candidate.get("finishReason") == "SAFETY":
+                print("⚠️ API blocked content due to safety filters.")
+                return None
+
+            return candidate.get("content", {}).get("parts", [{}])[0].get("text")
+
         except requests.exceptions.RequestException as e:
             print(f"⚠️ Attempt {attempt}: Request failed: {e}")
             if attempt < max_retries:
                 time.sleep(5 * attempt)
+
     return None
 
 # -------------------------------
