@@ -46,29 +46,33 @@ def main():
         sys.exit(1)
     headers = {"X-goog-api-key": key}
 
-    # Choose Gemini model
     text_model = "models/gemini-2.5-flash"
     image_model = "models/gemini-2.5-flash-image"
 
-    # 1) Generate KR Puram news
+    today_str = datetime.date.today().isoformat()
+
+    # --- 1) Generate strictly today KR Puram news ---
     news_prompt = (
-        "You are a local news reporter for KR Puram, Bangalore.\n"
-        "Generate today's news bulletin in sections: Traffic, Weather, Local Events, Alerts, Community Updates.\n"
-        "Plain text, concise, suitable for residents.\n"
-        f"DATE: {datetime.date.today().isoformat()}"
+        f"You are a local news reporter for KR Puram, Bangalore.\n"
+        f"ONLY include news and events that happen TODAY ({today_str}).\n"
+        "Do NOT include recurring, past, or speculative events.\n"
+        "Generate in sections: Traffic, Weather, Local Events, Alerts, Community Updates.\n"
+        "Each section must explicitly reference today's date.\n"
+        "Output plain text, concise, suitable for residents."
     )
     news_text = fetch_gemini_content(news_prompt, headers, text_model)
 
     # Save news
     out_dir = pathlib.Path("output")
     out_dir.mkdir(exist_ok=True)
-    news_file = out_dir / f"{datetime.date.today().isoformat()}_krpuram_news.md"
+    news_file = out_dir / f"{today_str}_krpuram_news.md"
     news_file.write_text(news_text, encoding="utf-8")
     print(f"✅ KR Puram news saved at {news_file}")
 
-    # 2) Generate flashcards (10 key words/phrases)
+    # --- 2) Generate flashcards (10 key words/phrases) ---
     flashcard_prompt = (
         f"Summarize the following news into 10 key words or phrases for flashcards.\n"
+        f"Each phrase must be relevant to today's events ({today_str}).\n"
         f"For each, provide a short explanation (1–2 sentences) suitable for residents.\n\n"
         f"News content:\n{news_text}\n\n"
         "Output in Markdown format:\n"
@@ -77,23 +81,23 @@ def main():
     )
     flashcards_text = fetch_gemini_content(flashcard_prompt, headers, text_model)
 
-    flash_file = out_dir / f"{datetime.date.today().isoformat()}_krpuram_flashcards.md"
+    flash_file = out_dir / f"{today_str}_krpuram_flashcards.md"
     flash_file.write_text(flashcards_text, encoding="utf-8")
     print(f"✅ KR Puram flashcards saved at {flash_file}")
 
-    # 3) Generate 10-word news flash with source
-    source_text = "Source: KR Puram Local News / Deccan Herald"
+    # --- 3) Generate 10-word news flash with date and source ---
+    source_text = f"Source: KR Puram Daily ({today_str})"
     flash_prompt = (
         f"Summarize the following KR Puram news in 10 words for a single news flash.\n"
-        f"Include the source at the end in the format 'Source: ...'.\n"
+        f"Include today's date ({today_str}) and the source at the end in the format 'Source: ...'.\n"
         f"News content:\n{news_text}"
     )
     news_flash = fetch_gemini_content(flash_prompt, headers, text_model).strip().replace("\n", " ")
     if source_text not in news_flash:
         news_flash += f" ({source_text})"
 
-    # 4) Generate image for news flash
-    image_dir = out_dir / "images" / datetime.date.today().isoformat()
+    # --- 4) Generate image for news flash ---
+    image_dir = out_dir / "images" / today_str
     image_dir.mkdir(parents=True, exist_ok=True)
     image_file = image_dir / "krpuram_news_flash.png"
     generate_image_from_text(news_flash, headers, image_model, image_file)
